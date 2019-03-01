@@ -1,5 +1,5 @@
 class Slide
-  attr_accessor :tags
+  attr_accessor :tags, :photos
 
   def initialize(photos)
     @photos = photos

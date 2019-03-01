@@ -12,9 +12,13 @@ class App
         best_score = 0
         best_alg = ""
 
-        output.write("Starting #{extract_name(file_name)}\n")
+        msg = "Starting #{extract_name(file_name)}\n"
+        output.write(msg)
+        puts msg
+
         ShowStarter::ALGS.each do |method|
           slideshow = ShowStarter.new(output).call(photos, method)
+
           score = slideshow.score
           puts "#{method.to_s} -- #{score}"
           if score > best_score
@@ -24,9 +28,9 @@ class App
         end
 
         overall_score += best_score
-        msg = "#{extract_name(file_name)} -- Score: #{best_score}"
-        puts msg
-        output.write(msg + "\n")
+
+        print(output, "#{extract_name(file_name)} -- Score: #{best_score}")
+        print(output, "")
       end
 
       msg = "Overall Score: #{overall_score}"
@@ -37,14 +41,19 @@ class App
   def extract_name(file_name)
     file_name.split('.')[1][3..-1]
   end
+
+  def print(output, msg)
+    puts msg
+    output.write(msg + "\n")
+  end
 end
 
 file_names = [
   "./a_example.txt",
-  # "./b_lovely_landscapes.txt",
-  "./c_memorable_moments.txt", # 563 from greedy, 1691 from greedy cycle
-  # "./d_pet_pictures.txt",
-  # "./e_shiny_selfies.txt"
+  "./b_lovely_landscapes.txt", # 7356 from glue @ 80s, #36930 @ 1.7s from tag bucket
+  "./c_memorable_moments.txt", # 563 from greedy, 1691 from greedy cycle, 841 from tag_bucket
+  "./d_pet_pictures.txt", # 203436 from tag bucket @ 0.75s
+  "./e_shiny_selfies.txt" # 135248 from tag bucket @ 1.2s
 ]
 
 

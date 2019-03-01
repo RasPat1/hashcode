@@ -1,15 +1,18 @@
 require './SlideShow.rb'
 require './Transition.rb'
+require 'byebug'
 
 class ShowStarter
 
   ALGS = [
     BASIC = :basic,
-    # REVERSE = :reverse,
+    REVERSE = :reverse,
     RANDOM = :random,
-    # BRUTE = :brute,
+    BRUTE = :brute,
     GREEDY = :greedy,
-    GREEDY_CYCLE = :greedy_cycle
+    GREEDY_CYCLE = :greedy_cycle,
+    GREEDY_CYCLE_GLUE = :greedy_cycle_glue,
+    TAG_BUCKET = :tag_bucket
   ]
 
   def initialize(output_file)
@@ -23,7 +26,9 @@ class ShowStarter
     slideshow = self.send(method.to_s, photos)
     stop = Time.now
 
-    @output_file.write("#{slideshow.name}: #{stop - start}s\n")
+    msg = "#{slideshow.name}: #{stop - start}s"
+    @output_file.write(msg + "\n")
+    puts msg
 
     slideshow
   end
@@ -83,7 +88,7 @@ class ShowStarter
     max_score = -1
     best_show = nil
 
-    trials = 1
+    trials = 10
     trials.times do |trial|
       slideshow = SlideShow.new(name: name)
       photos = photos.shuffle
@@ -135,7 +140,10 @@ class ShowStarter
 # then continue
   # I mean it performs way better than the randoms but it's not performant
   # Ends up being like n^2logn^2 or liek worse
+  # This is 5x better than random
+  # But doesn't finish on the larger files
   def greedy(photos, name: "Greedy")
+    return SlideShow.new(name: name) if photos.size > 10
     slides = []
     photos.each do |photo|
       slides << Slide.new([photo])
@@ -184,7 +192,9 @@ class ShowStarter
   # but it is practically much better since we aren't sorting
   # and the number of pairs calculated is half the size of the previous greedy
   # also it considers more edges so that's good
+  # This is 3x better than greedy
   def greedy_cycle(photos, name: "Greedy Cycle")
+    return SlideShow.new(name: name) if photos.size > 10000
     slides = []
 
     photos.each do |photo|
@@ -193,6 +203,13 @@ class ShowStarter
 
     curr_slide = slides.shift
     cycle = [curr_slide]
+
+    # Then we don't search the full region for the really juicy values
+    # how abotu we put in a shortcut heurisitc that syas hey if we've foudn apretty godo bmatch already so let's stop searching
+    # And wehn teh list is long we can short cut relatively low
+    # and when teh list is longer we can short cut later
+
+    threshold = 4 # idk made this starting param up
 
     while slides.size > 0
       best_score = -1
@@ -206,17 +223,49 @@ class ShowStarter
           best_slide = next_slide
           best_slide_index = index
         end
+        # if best_score >= threshold
+        #   break
+        # end
       end
 
       # we know the best next slide now!
       cycle << best_slide
       curr_slide = best_slide
       slides.delete_at(best_slide_index)
+      # update threshold
+      # lol on unweighted average
+      # threshold = (threshold + best_score) / 2
     end
 
     SlideShow.new(slides: cycle, name: name)
   end
 
+  # OPtimize run time of greedy cycle
+  # def greedy_cycle(photos, name: "Greedy Cycle Time Optimized")
+  #   # WE can trade off runtime for complexity maybe?
+  # end
+
+
+  # We can break this into a series of chunks
+  # maybe a list of 80k hsodul be 80 lists of 1k each that we put together
+  # this can help us since we do linear chunking aka 80 * 1k^2 is way better than 80^2
+  # The downside there is we have 80 pieces taht we want to glue back together which is fine
+
+  def greedy_cycle_glue(photos, name: "Greedy Glue")
+    slides = []
+
+    chunk_size = 50
+    chunk_count = (photos.size / chunk_size).ceil
+    chunk_count.times do |chunk_num|
+      low = chunk_num * chunk_size
+      high = low + chunk_size
+      chunk = photos[low..high]
+      slideshow = greedy_cycle(chunk)
+      slides += slideshow.slides
+    end
+
+    SlideShow.new(slides: slides, name: name)
+  end
 
 
   def sort(arr)
@@ -232,6 +281,78 @@ class ShowStarter
     end
 
     arr
+  end
+
+  # Okay making the glue idea was fun
+  # But time to go to the real crux of this problem
+  # Let's bucket tags
+  # Since we're comign out with scores of
+
+  # 1.1M was max score we saw on scoreboard
+  # for a-e which has a count of 80K + 1K + 90k + 80k = 251k images
+  # so looks like there is an transition score of 4.
+  # We're currently hitting an avg transtion score of like 0.1 on b and 1.6 on c
+
+
+  def tag_bucket(photos, name: "Tag Bucket")
+    # We're not sure how many unique tags there are in each sectionm
+    # but we can find out in O(t) time
+    # we could also specialize approaches for each type of input
+
+    # do we try to compose ideal slides based on tags?
+    all_tags = {}
+    slides = []
+
+    # O(n)
+    photos.each do |photo|
+      slides << Slide.new([photo])
+    end
+
+    # O(t), where t is number of tags
+    # O(n*t) space?
+    slides.each do |slide|
+      slide.tags.each do |tag_name, present|
+        all_tags[tag_name] = [] unless all_tags.key?(tag_name)
+        all_tags[tag_name] << slide
+      end
+    end
+
+    slideshow = SlideShow.new(name: name)
+    added_slides = {}
+
+    all_tags.each do |tag_name, tag_bucket|
+      available_slides = []
+      tag_bucket.each do |tagged_slide|
+        available_slides << tagged_slide unless added_slides.key?(tagged_slide)
+        # slideshow.add_slide(tagged_slide)
+        added_slides[tagged_slide] = true
+      end
+      next if available_slides.size == 0
+
+      tmp_photos = []
+      available_slides.each do |slide|
+        tmp_photos += slide.photos
+      end
+
+
+      # Use an alternate strategy inside the bucket
+      if available_slides.size < 10000
+        greedy_slideshow = greedy_cycle(tmp_photos)
+        greedy_slideshow.slides.each do |slide|
+          slideshow.add_slide(slide)
+        end
+      else
+        greedy_cycle_glue = greedy_cycle_glue(tmp_photos)
+        greedy_cycle_glue.slides.each do |slide|
+          slideshow.add_slide(slide)
+        end
+        puts "TRIGGERED THE GLUE"
+      end
+
+    end
+
+
+    slideshow
   end
 
 

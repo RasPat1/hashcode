@@ -1,0 +1,24 @@
+Starting example
+Tag Bucket: 3.3e-05s
+example -- Score: 2
+
+Starting lovely_landscapes
+Tag Bucket: 2.050585s
+lovely_landscapes -- Score: 36930
+
+Starting memorable_moments
+Greedy Cycle: 0.630467s
+greedy_cycle -- 1691
+Tag Bucket: 0.015215s
+tag_bucket -- 1072
+memorable_moments -- Score: 1691
+
+Starting pet_pictures
+Tag Bucket: 163.729106s
+pet_pictures -- Score: 377186
+
+Starting shiny_selfies
+Tag Bucket: 159.045175s
+shiny_selfies -- Score: 379474
+
+Overall Score: 795283

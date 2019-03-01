@@ -31,11 +31,12 @@ class SlideShow
     only_in_one = 0
     only_in_two = 0
 
-    if slide1.tags.size < slide2.tags.size
-      tmp = slide1
-      slide1 = slide2
-      slide2 = tmp
-    end
+    # bad in practice
+    # if slide1.tags.size < slide2.tags.size
+    #   tmp = slide1
+    #   slide1 = slide2
+    #   slide2 = tmp
+    # end
 
     slide1.tags.each do |tag_name, present|
       if slide2.tags.key?(tag_name)
