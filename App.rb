@@ -21,6 +21,7 @@ class App
 
           score = slideshow.score
           puts "#{method.to_s} -- #{score}"
+
           if score > best_score
             best_score = score
             best_alg = slideshow.name
@@ -50,11 +51,10 @@ end
 
 file_names = [
   "./a_example.txt",
-  "./b_lovely_landscapes.txt", # 7356 from glue @ 80s, #36930 @ 1.7s from tag bucket
-  "./c_memorable_moments.txt", # 563 from greedy, 1691 from greedy cycle, 841 from tag_bucket
-  "./d_pet_pictures.txt", # 203436 from tag bucket @ 0.75s
-  "./e_shiny_selfies.txt" # 135248 from tag bucket @ 1.2s
+  "./b_lovely_landscapes.txt", # All Horizontal
+  # "./c_memorable_moments.txt",
+  # "./d_pet_pictures.txt",
+  # "./e_shiny_selfies.txt" # All Vertivcal
 ]
-
 
 App.new.call(file_names)

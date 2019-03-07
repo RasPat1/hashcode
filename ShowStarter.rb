@@ -1,18 +1,27 @@
 require './SlideShow.rb'
 require './Transition.rb'
+require './Node.rb'
 require 'byebug'
 
 class ShowStarter
 
+
   ALGS = [
-    BASIC = :basic,
-    REVERSE = :reverse,
-    RANDOM = :random,
-    BRUTE = :brute,
-    GREEDY = :greedy,
-    GREEDY_CYCLE = :greedy_cycle,
-    GREEDY_CYCLE_GLUE = :greedy_cycle_glue,
-    TAG_BUCKET = :tag_bucket
+    # BASIC = :basic,
+    # REVERSE = :reverse,
+    # RANDOM = :random,
+    # BRUTE = :brute,
+    # GREEDY = :greedy,
+    # GREEDY_CYCLE = :greedy_cycle,
+    # GREEDY_CYCLE_GLUE = :greedy_cycle_glue,
+    # TAG_BUCKET = :tag_bucket,
+    # SORTS = :sorts,
+    GRAPH = :graph
+  ]
+
+  LIMITS = [
+    BRUTE_LIMIT = 10,
+    GREEDY_LIMIT = 10000
   ]
 
   def initialize(output_file)
@@ -60,6 +69,7 @@ class ShowStarter
   # Um this is optimal lol, always, if it completes
   # this excludes the idea of vertical pairs
   def brute(photos, name: "Brute Force")
+    return SlideShow.new(name: name) if photos.size > BRUTE_LIMIT
     all_permutations = all_perms(photos, [], [])
     max_score = -1
     best_show = nil
@@ -85,6 +95,7 @@ class ShowStarter
 
   # Randomized alg that does n trials
   def random(photos, name: "Random")
+
     max_score = -1
     best_show = nil
 
@@ -143,7 +154,7 @@ class ShowStarter
   # This is 5x better than random
   # But doesn't finish on the larger files
   def greedy(photos, name: "Greedy")
-    return SlideShow.new(name: name) if photos.size > 10
+    return SlideShow.new(name: name) if photos.size > GREEDY_LIMIT
     slides = []
     photos.each do |photo|
       slides << Slide.new([photo])
@@ -158,8 +169,7 @@ class ShowStarter
       end
     end
 
-    # pairs = sort(pairs)
-    pairs = pairs.sort { |pair| -1 * pair.score }
+    pairs = pairs.sort_by(&:score).reverse
     slides_included = {}
     # The funny thing here is that we select a set of pairs and we ignore half
     # the transitions in between the selected pairs
@@ -194,7 +204,7 @@ class ShowStarter
   # also it considers more edges so that's good
   # This is 3x better than greedy
   def greedy_cycle(photos, name: "Greedy Cycle")
-    return SlideShow.new(name: name) if photos.size > 10000
+    return SlideShow.new(name: name) if photos.size > GREEDY_LIMIT
     slides = []
 
     photos.each do |photo|
@@ -223,9 +233,9 @@ class ShowStarter
           best_slide = next_slide
           best_slide_index = index
         end
-        # if best_score >= threshold
-        #   break
-        # end
+        if best_score >= threshold
+          break
+        end
       end
 
       # we know the best next slide now!
@@ -252,35 +262,45 @@ class ShowStarter
   # The downside there is we have 80 pieces taht we want to glue back together which is fine
 
   def greedy_cycle_glue(photos, name: "Greedy Glue")
-    slides = []
+    slide_chunks = []
 
     chunk_size = 50
-    chunk_count = (photos.size / chunk_size).ceil
+    chunk_count = (photos.size / chunk_size.to_f).ceil
     chunk_count.times do |chunk_num|
       low = chunk_num * chunk_size
       high = low + chunk_size
       chunk = photos[low..high]
       slideshow = greedy_cycle(chunk)
-      slides += slideshow.slides
+      slide_chunks << slideshow.slides
+    end
+
+    # Then let's put the chunks back together in an optimized way? Maybe that's not important
+    # We can squeeze a little bit of extra perf out of this if there are a reasonable number of chunks
+
+    # chunk_cycle lol
+    curr_chunk = slide_chunks.shift
+    slides = curr_chunk
+    while slide_chunks.size  > 0
+      best_score = -1
+      best_chunk = nil
+      best_chunk_index = -1
+
+      slide_chunks.each_with_index do |chunk, index|
+        glue_score = SlideShow.transition_score(curr_chunk.last, chunk.first)
+
+        if glue_score > best_score
+          best_score = glue_score
+          best_chunk = chunk
+          best_chunk_index = index
+        end
+      end
+
+      slides += best_chunk
+      curr_chunk = best_chunk
+      slide_chunks.delete_at(best_chunk_index)
     end
 
     SlideShow.new(slides: slides, name: name)
-  end
-
-
-  def sort(arr)
-    arr.each_with_index do |el1, i|
-      arr.each_with_index do |el2, j|
-        next if j < i
-        if arr[j].score < arr[i].score
-          tmp = arr[i]
-          arr[i] = arr[j]
-          arr[j] = tmp
-        end
-      end
-    end
-
-    arr
   end
 
   # Okay making the glue idea was fun
@@ -329,30 +349,133 @@ class ShowStarter
       end
       next if available_slides.size == 0
 
+      # convet the slides back to photos since we're going
+      # to pass it through another system
+
       tmp_photos = []
       available_slides.each do |slide|
         tmp_photos += slide.photos
       end
 
-
-      # Use an alternate strategy inside the bucket
-      if available_slides.size < 10000
-        greedy_slideshow = greedy_cycle(tmp_photos)
-        greedy_slideshow.slides.each do |slide|
-          slideshow.add_slide(slide)
-        end
+      # Use an alternate strategy inside the bucket depending on how large it is
+      if available_slides.size <= BRUTE_LIMIT
+        tmp_show = brute(tmp_photos)
+      elsif available_slides.size <= GREEDY_LIMIT
+        tmp_show = greedy_cycle(tmp_photos)
       else
-        greedy_cycle_glue = greedy_cycle_glue(tmp_photos)
-        greedy_cycle_glue.slides.each do |slide|
-          slideshow.add_slide(slide)
-        end
-        puts "TRIGGERED THE GLUE"
+        tmp_show = greedy_cycle_glue(tmp_photos)
+      end
+
+      tmp_show.slides.each do |slide|
+        slideshow.add_slide(slide)
       end
 
     end
 
-
     slideshow
+  end
+
+
+  # For this one let's try a series of different approaches
+  def sorts(photos, name: "Sorts")
+    # Let's start by sorting the photos by number of tags
+    # We know in general that we're "wasting" capactiy if we ahve a large number of tags near a small number of tags
+
+    slides = []
+    photos.each do |photo|
+      slides << Slide.new([photo])
+    end
+
+    slides = slides.sort { |slide1, slide2| slide2.tags.size <=> slide1.tags.size }
+
+    SlideShow.new(slides: slides, name: name)
+  end
+
+  def graph(photos, name: "Graphs")
+    # Let's model the system as a graph
+    # We'll say a photo is a node
+    # WE'll ALSO say that a specific tag is a node
+    # Then we'll draw an edge from a Photo node to a tag node if the photo has that tag
+    # Our minimization problem is now traverse the graph to find nodes
+    # which have extra outbound edges and have a gropu of shared nodes
+
+    # So let's say we do a smapling graph search approach
+    # We pick a node and we traverse some even number of edges
+    # in doing so we've hit n/2 tags
+    # Can we say anyhtin about the probabilty of hitting a specific node multiple times?
+    # can we talk abotu the uniqueness of the path
+    # there's almost somethign here but not quite
+    """
+         T
+      N  T  N
+         T
+    """
+
+    # There are these shared Tags between teh node
+    # What does a random walk look like?
+    # What if we start at a node and send off a few "runners"
+    # At 2 steps (assuming we can't go back) we will be at a conencted node
+    # Okay that's a start we must pair with a connected node if there are any remaining
+    # Then 2 steps from there we end up at another photo possibly the original?
+    # So far we've described a path
+    # If we've sent off many runners and many of them go to the same photo in step 2
+    # Then either the photos ahve a number of tags in common
+    # OR
+    # The tags that they share are rare
+    # If the tags they share are rare is it better to put them next to each otehr or keep them away?
+    # This is like a reverse tag bucket almost
+    # Go to the photo
+    # Select a photo that shares each of its tags
+    # WE can find very connected photos. Is this what we want?
+    # LEt's try it. It may perform very well on one of the input sets
+    # So we are optimizing for connectivity here
+    # Start with a Photo Node
+    # Ech photo noe is connected to t tag nodes for each tag it has
+    # each of those tags is connected to n photos for every photo that has that tag
+    # Perhaps we do a very large numbe of walks liek this and see how we do?
+
+
+    photo_nodes = []
+
+    photos.each do |photo|
+      photo_node = PhotoNode.new(photo)
+      photo.tags.each do |tag_name, present|
+        tag_node = TagNode.find_or_create(tag_name)
+        photo_node.add_neighbor(tag_node)
+      end
+
+      photo_nodes << photo_node
+    end
+
+    # Let's start by just doing a walk
+    # Do we hit dead ends? What do we do when that happens?
+    unvisited = {}
+    photo_nodes.each do |node|
+      unvisited[node] = true
+    end
+
+    slides = []
+
+    while unvisited.size > 0
+      # rand_key = (unvisited.size * rand).floor
+      # start = unvisited.keys[rand_key]
+      start = unvisited.first[0]
+      q = [start]
+
+      while q.size > 0
+        # select a start point
+        node = q.shift
+        next unless unvisited[node]
+        unvisited.delete(node)
+        slides << Slide.new([node.obj])
+        q << node.random_neighbor.random_neighbor
+      end
+    end
+
+    puts "Slide Size: #{slides.size}"
+    puts "Photo Size: #{photos.size}"
+
+    SlideShow.new(slides: slides, name: name)
   end
 
 

@@ -1,24 +1,56 @@
 Starting example
-Tag Bucket: 3.3e-05s
-example -- Score: 2
+Basic: 2.0e-05s
+Reverse Basic: 7.0e-06s
+Random: 4.8e-05s
+Brute Force: 0.000155s
+Greedy: 2.9e-05s
+Greedy Cycle: 9.0e-06s
+Greedy Glue: 3.0e-06s
+Tag Bucket: 2.3e-05s
+example -- Score: 3
 
 Starting lovely_landscapes
-Tag Bucket: 2.050585s
+Basic: 0.106943s
+Reverse Basic: 0.061823s
+Random: 2.761822s
+Brute Force: 1.0e-05s
+Greedy: 4.0e-06s
+Greedy Cycle: 3.0e-06s
+Greedy Glue: 5.027383s
+Tag Bucket: 1.949648s
 lovely_landscapes -- Score: 36930
 
 Starting memorable_moments
-Greedy Cycle: 0.630467s
-greedy_cycle -- 1691
-Tag Bucket: 0.015215s
-tag_bucket -- 1072
+Basic: 0.000376s
+Reverse Basic: 0.000371s
+Random: 0.019058s
+Brute Force: 1.0e-05s
+Greedy: 3.0e-06s
+Greedy Cycle: 0.638898s
+Greedy Glue: 0.031927s
+Tag Bucket: 0.015223s
 memorable_moments -- Score: 1691
 
 Starting pet_pictures
-Tag Bucket: 163.729106s
+Basic: 0.042895s
+Reverse Basic: 0.112052s
+Random: 2.387499s
+Brute Force: 9.0e-06s
+Greedy: 4.0e-06s
+Greedy Cycle: 4.0e-06s
+Greedy Glue: 4.16591s
+Tag Bucket: 167.138093s
 pet_pictures -- Score: 377186
 
 Starting shiny_selfies
-Tag Bucket: 159.045175s
+Basic: 0.170044s
+Reverse Basic: 0.093438s
+Random: 3.320741s
+Brute Force: 9.0e-06s
+Greedy: 5.0e-06s
+Greedy Cycle: 9.0e-06s
+Greedy Glue: 5.094737s
+Tag Bucket: 157.700499s
 shiny_selfies -- Score: 379474
 
-Overall Score: 795283
+Overall Score: 795284

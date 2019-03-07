@@ -1,0 +1,9 @@
+Starting example
+Graphs: 0.000179s
+example -- Score: 1
+
+Starting lovely_landscapes
+Graphs: 9.510829s
+lovely_landscapes -- Score: 12
+
+Overall Score: 13
