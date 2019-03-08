@@ -7,25 +7,27 @@ class ShowStarter
 
 
   ALGS = [
-    # BASIC = :basic,
+    BASIC = :basic,
     # REVERSE = :reverse,
     # RANDOM = :random,
     # BRUTE = :brute,
-    # GREEDY = :greedy,
-    # GREEDY_CYCLE = :greedy_cycle,
-    # GREEDY_CYCLE_GLUE = :greedy_cycle_glue,
-    # TAG_BUCKET = :tag_bucket,
-    # SORTS = :sorts,
-    GRAPH = :graph
+    GREEDY = :greedy,
+    GREEDY_CYCLE = :greedy_cycle,
+    GREEDY_CYCLE_GLUE = :greedy_cycle_glue,
+    TAG_BUCKET = :tag_bucket,
+    SORTS = :sorts,
+    GRAPH = :graph,
+    SIMULATED_ANNEALING = :simulated_annealing
   ]
 
   LIMITS = [
-    BRUTE_LIMIT = 10,
+    BRUTE_LIMIT = 8,
     GREEDY_LIMIT = 10000
   ]
 
-  def initialize(output_file)
+  def initialize(output_file, debug = false)
     @output_file = output_file
+    @debug = debug
   end
 
   # First alg puts each photo on a slide
@@ -233,9 +235,9 @@ class ShowStarter
           best_slide = next_slide
           best_slide_index = index
         end
-        if best_score >= threshold
-          break
-        end
+        # if best_score >= threshold
+        #   break
+        # end
       end
 
       # we know the best next slide now!
@@ -366,11 +368,34 @@ class ShowStarter
         tmp_show = greedy_cycle_glue(tmp_photos)
       end
 
-      tmp_show.slides.each do |slide|
+      # alt approach =
+      if available_slides.size > BRUTE_LIMIT
+        annealing_show = simulated_annealing(tmp_photos)
+      else
+        annealing_show = nil
+      end
+
+      if annealing_show && annealing_show.score > tmp_show.score
+        step_2 = annealing_show
+      else
+        step_2 = tmp_show
+      end
+
+      step_2.slides.each do |slide|
         slideshow.add_slide(slide)
       end
 
     end
+
+
+    pees = []
+    slideshow.slides.each do |slide|
+      pees += slide.photos
+    end
+
+    anneal_show = simulated_annealing(pees)
+    slideshow.slides = anneal_show.slides
+
 
     slideshow
   end
@@ -479,13 +504,136 @@ class ShowStarter
   end
 
 
+  # Let's try to take the vertical thing into account now
+  # How do we do that
+  # weeeellll
+  # How do we figure out what vertical slides to put togehter?
+  # jesez this is actually a hard problem
+
+  def verts(photos, name: "Vert Aware")
+    # Let's say that we ahve only vertical ones.
+    # Can we try a dumb way to see if we get anything better?
+    # If s1 is large but s2 and s3 are small in a transition
+    # then adding a vertical photo that has a large s2,s3 is optimal
+    # how do we find that?
+
+    # Is there some useful heuristic about having common and rare tags?
+
+    slides = []
+
+    # We may need to break score down into a smaller piece
+
+    # Find vertical photos on their own slide with low transition scores for slides before and after
+
+    # Then extract those photos
+    # Then add those to other slides where they can do good?
+
+    # One of the general issues that we're having is that we don't
+    # know if putting it there is gogin to be helpful before putting it there
+    # Let's find the ideal place to put it before inserting it?
+
+    # Seed by using another realtiveyl fast approach?
+
+    SlideShow.new(slides: slides, name: name)
+  end
+
+
+  def simulated_annealing(photos, name: "Simulated Annealing")
+    # We'll want to vary these parameters
+    temp = 10000
+    cooling_rate = 0.0003
+    best_score = -1
+    best_slides = nil
+
+    score_graph = []
+
+    slides = []
+    photos.each do |photo|
+      slides << Slide.new([photo])
+    end
+
+    slideshow = SlideShow.new(slides: slides, name: name)
+    score = slideshow.score
+    best_score = score
+    best_slides = slides
+
+    while temp > 1
+      s1_index = (rand * slides.size).floor
+      s2_index = (rand * slides.size).floor
+
+      next if s1_index == s2_index
+
+      s1 = slides[s1_index]
+      s2 = slides[s2_index]
+
+      score_delta = 0
+
+      score_delta -= SlideShow.transition_score(s1, slides[s1_index - 1]) if s1_index > 0
+      score_delta -= SlideShow.transition_score(s1, slides[s1_index + 1]) if s1_index + 1 < slides.size
+      score_delta -= SlideShow.transition_score(s2, slides[s2_index - 1]) if s2_index > 0
+      score_delta -= SlideShow.transition_score(s2, slides[s2_index + 1]) if s2_index + 1 < slides.size
+
+      p_debug "===START==="
+      p_debug slides
+      p_debug "Swapped: #{s1_index} with #{s2_index}"
+      # swap
+      slides[s1_index] = s2
+      slides[s2_index] = s1
+
+      score_delta += SlideShow.transition_score(s2, slides[s1_index - 1]) if s1_index > 0
+      score_delta += SlideShow.transition_score(s2, slides[s1_index + 1]) if s1_index + 1 < slides.size
+      score_delta += SlideShow.transition_score(s1, slides[s2_index - 1]) if s2_index > 0
+      score_delta += SlideShow.transition_score(s1, slides[s2_index + 1]) if s2_index + 1 < slides.size
+
+      prob = Math.exp(score_delta.fdiv(temp))
+
+      p_debug temp
+      p_debug prob
+      p_debug slides
+      p_debug score
+      p_debug score_delta
+      p_debug prob
+      p_debug "===END==="
+
+      if score_delta >= 0 || prob < rand
+        score += score_delta
+      else
+        # Swap back
+        slides[s1_index] = s1
+        slides[s2_index] = s2
+      end
+
+      if score >= best_score
+        p_debug("New Best Score: #{best_score}") if score > best_score
+        best_score = score
+        best_slides = slides.clone
+      end
+
+      temp *= 1 - cooling_rate
+    end
+
+    SlideShow.new(slides: best_slides, name: name)
+  end
+
+
+  def accept_prob(score, new_score, temp)
+    if new_score > score
+      # accept it
+      return 1.0
+    end
+
+    diff = score - new_score
+    Math.exp(diff.fdiv(temp))
+  end
+
+
   # We could try a gradient ascent version of the random?
   # Where we keep some high scoring part and shuffle the rest right
   # that actually feels pretty cool
 
   # We could possibly just use machine learning here and say okay here's your feedback function. Just solve the problem
 
-  # WE coudl try doing it piecemeal. find the highest value transition and than the second highest transition and stitch tose together
+  # We could try doing it piecemeal. Find the highest value transition and than the second highest transition and stitch tose together
 
   # We could try each slide with each other slide and find all the pairs of transitions. Then we need to select a set of transitions that can cover our entire set
 
@@ -507,5 +655,11 @@ class ShowStarter
     all_perms << prefix.clone if prefix.size == photos.size
 
     all_perms
+  end
+
+  def p_debug(msg)
+    if @debug
+      puts msg
+    end
   end
 end

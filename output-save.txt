@@ -1,0 +1,57 @@
+Starting lovely_landscapes
+
+Basic: 0.064004s
+basic -- 12
+Random: 2.933921s
+random -- 18
+Greedy Glue: 8.480171s
+greedy_cycle_glue -- 645
+Tag Bucket: 25.881201s
+tag_bucket -- 36930
+Graphs: 3.7874s
+graph -- 12
+lovely_landscapes -- Score: 36930
+
+Starting memorable_moments
+
+Basic: 0.000367s
+basic -- 112
+Random: 0.020777s
+random -- 121
+Greedy Glue: 0.039806s
+greedy_cycle_glue -- 904
+Tag Bucket: 8.610283s
+tag_bucket -- 1085
+Graphs: 0.018648s
+graph -- 112
+memorable_moments -- Score: 1085
+
+Starting pet_pictures
+
+Basic: 0.040777s
+basic -- 133588
+Random: 3.042633s
+random -- 133866
+Greedy Glue: 5.635009s
+greedy_cycle_glue -- 295015
+Tag Bucket: 249.814047s
+tag_bucket -- 378338
+Graphs: 1.519462s
+graph -- 133588
+pet_pictures -- Score: 378338
+
+Starting shiny_selfies
+
+Basic: 0.265336s
+basic -- 58408
+Random: 4.462378s
+random -- 58490
+Greedy Glue: 8.918761s
+greedy_cycle_glue -- 201569
+Tag Bucket: 241.238818s
+tag_bucket -- 379488
+Graphs: 2.875166s
+graph -- 58408
+shiny_selfies -- Score: 379488
+
+Overall Score: 795841

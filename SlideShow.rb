@@ -27,6 +27,8 @@ class SlideShow
   end
 
   def self.transition_score(slide1, slide2)
+    return 0 if slide1 == nil || slide2 == nil
+
     shared = 0
     only_in_one = 0
     only_in_two = 0

@@ -1,9 +1,101 @@
 Starting example
-Graphs: 0.000179s
-example -- Score: 1
+
+Basic: 9.0e-06s
+basic -- 2
+Greedy: 2.9e-05s
+greedy -- 2
+Greedy Cycle: 1.1e-05s
+greedy_cycle -- 3
+Greedy Glue: 1.4e-05s
+greedy_cycle_glue -- 3
+Tag Bucket: 0.120011s
+tag_bucket -- 3
+Sorts: 1.0e-05s
+sorts -- 2
+Graphs: 6.1e-05s
+graph -- 2
+Simulated Annealing: 0.12064s
+simulated_annealing -- 3
+example -- Score: 3
 
 Starting lovely_landscapes
-Graphs: 9.510829s
-lovely_landscapes -- Score: 12
 
-Overall Score: 13
+Basic: 0.128415s
+basic -- 12
+Greedy: 1.0e-05s
+greedy -- 0
+Greedy Cycle: 4.0e-06s
+greedy_cycle -- 0
+Greedy Glue: 8.837082s
+greedy_cycle_glue -- 645
+Tag Bucket: 29.286227s
+tag_bucket -- 36930
+Sorts: 0.085539s
+sorts -- 18
+Graphs: 4.02092s
+graph -- 12
+Simulated Annealing: 20.921311s
+simulated_annealing -- 36
+lovely_landscapes -- Score: 36930
+
+Starting memorable_moments
+
+Basic: 0.000373s
+basic -- 112
+Greedy: 2.139869s
+greedy -- 934
+Greedy Cycle: 0.766017s
+greedy_cycle -- 1691
+Greedy Glue: 0.041143s
+greedy_cycle_glue -- 904
+Tag Bucket: 22.410896s
+tag_bucket -- 1107
+Sorts: 0.001012s
+sorts -- 115
+Graphs: 0.019783s
+graph -- 112
+Simulated Annealing: 0.545302s
+simulated_annealing -- 678
+memorable_moments -- Score: 1691
+
+Starting pet_pictures
+
+Basic: 0.114266s
+basic -- 133588
+Greedy: 8.0e-06s
+greedy -- 0
+Greedy Cycle: 4.0e-06s
+greedy_cycle -- 0
+Greedy Glue: 5.906041s
+greedy_cycle_glue -- 295015
+Tag Bucket: 266.05348s
+tag_bucket -- 378349
+Sorts: 0.145237s
+sorts -- 159336
+Graphs: 1.798658s
+graph -- 133588
+Simulated Annealing: 18.584403s
+simulated_annealing -- 152015
+pet_pictures -- Score: 378349
+
+Starting shiny_selfies
+
+Basic: 0.046106s
+basic -- 58408
+Greedy: 1.1e-05s
+greedy -- 0
+Greedy Cycle: 5.0e-06s
+greedy_cycle -- 0
+Greedy Glue: 8.991496s
+greedy_cycle_glue -- 201569
+Tag Bucket: 326.967356s
+tag_bucket -- 379540
+Sorts: 0.125139s
+sorts -- 63269
+Graphs: 2.703596s
+graph -- 58408
+Simulated Annealing: 24.196068s
+simulated_annealing -- 74161
+shiny_selfies -- Score: 379540
+
+Overall Score: 796513

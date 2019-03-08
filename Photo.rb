@@ -28,6 +28,6 @@ class Photo
   end
 
   def to_s
-    "#{orientation_char} => #{@tags.join(',')}"
+    "#{orientation_char} => #{@tags.keys.join(',')}"
   end
 end
