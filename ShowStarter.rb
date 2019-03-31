@@ -11,13 +11,14 @@ class ShowStarter
     # REVERSE = :reverse,
     # RANDOM = :random,
     # BRUTE = :brute,
-    GREEDY = :greedy,
+    # GREEDY = :greedy,
     GREEDY_CYCLE = :greedy_cycle,
     GREEDY_CYCLE_GLUE = :greedy_cycle_glue,
     TAG_BUCKET = :tag_bucket,
-    SORTS = :sorts,
-    GRAPH = :graph,
-    SIMULATED_ANNEALING = :simulated_annealing
+    # SORTS = :sorts,
+    # GRAPH = :graph,
+    # SIMULATED_ANNEALING = :simulated_annealing,
+    # VERTS = :verts
   ]
 
   LIMITS = [
@@ -206,12 +207,19 @@ class ShowStarter
   # also it considers more edges so that's good
   # This is 3x better than greedy
   def greedy_cycle(photos, name: "Greedy Cycle")
-    return SlideShow.new(name: name) if photos.size > GREEDY_LIMIT
-    slides = []
+    # return SlideShow.new(name: name) if photos.size > GREEDY_LIMIT
 
-    photos.each do |photo|
-      slides << Slide.new([photo])
-    end
+    # if slides == nil
+    #   slides = []
+
+    #   photos.each do |photo|
+    #     slides << Slide.new([photo])
+    #   end
+    # else
+    #   # slides = slides
+    # end
+
+    slides = verts(photos).slides
 
     curr_slide = slides.shift
     cycle = [curr_slide]
@@ -235,6 +243,13 @@ class ShowStarter
           best_slide = next_slide
           best_slide_index = index
         end
+        if best_score >= curr_slide.tags.size / 2
+          # WE can't get a better score so stop here
+          # and move on
+          break
+        end
+
+        # this is an optimization to speed up search
         # if best_score >= threshold
         #   break
         # end
@@ -323,12 +338,17 @@ class ShowStarter
 
     # do we try to compose ideal slides based on tags?
     all_tags = {}
-    slides = []
 
-    # O(n)
-    photos.each do |photo|
-      slides << Slide.new([photo])
-    end
+    # if slides == nil
+    #   slides = []
+
+    #   # O(n)
+    #   photos.each do |photo|
+    #     slides << Slide.new([photo])
+    #   end
+    # end
+
+    slides = verts(photos).slides
 
     # O(t), where t is number of tags
     # O(n*t) space?
@@ -518,8 +538,49 @@ class ShowStarter
     # how do we find that?
 
     # Is there some useful heuristic about having common and rare tags?
-
     slides = []
+
+    tag_average = 0
+
+    tag_count = 0
+
+    photos.each do |photo|
+      tag_count += photo.tags.size
+    end
+
+    included = {}
+
+    tag_average = tag_count / photos.size
+    tag_min = (tag_average / 3) * 2
+
+    shorties = []
+    photos.each do |photo|
+      if photo.vertical? && photo.tags.size <= tag_min
+        shorties << photo
+        included[photo] = true
+      end
+    end
+
+    index = 0
+    while index < shorties.size
+      p1 = shorties[index]
+      p2 = shorties[index + 1]
+
+      photo_array = [p1]
+
+      if p2 != nil
+        photo_array << p2
+      end
+
+      slides << Slide.new(photo_array)
+      index += 2
+    end
+
+    photos.each do |photo|
+      if !included.key?(photo)
+        slides << Slide.new([photo])
+      end
+    end
 
     # We may need to break score down into a smaller piece
 

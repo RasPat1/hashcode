@@ -59,10 +59,10 @@ end
 
 file_names = [
   "./a_example.txt",
-  "./b_lovely_landscapes.txt", # All Horizontal
-  "./c_memorable_moments.txt",
-  "./d_pet_pictures.txt",
-  "./e_shiny_selfies.txt" # All Vertivcal
+  # "./b_lovely_landscapes.txt", # All Horizontal
+  # "./c_memorable_moments.txt",
+  # "./d_pet_pictures.txt",
+  "./e_shiny_selfies.txt" # All Vertical
 ]
 
 App.new.call(file_names)

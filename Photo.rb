@@ -27,6 +27,10 @@ class Photo
     end
   end
 
+  def vertical?
+    @orientation == VERTICAL
+  end
+
   def to_s
     "#{orientation_char} => #{@tags.keys.join(',')}"
   end
